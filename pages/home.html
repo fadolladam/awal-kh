@@ -1,0 +1,41 @@
+
+<!-- home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div id="status-bar"></div>
+  <main class="p-6">
+    <h1 class="text-xl font-bold mb-4">Prayer Times</h1>
+    <div class="bg-white p-4 rounded-lg shadow text-center">
+      <h2 class="text-3xl font-bold text-green-600">Asr</h2>
+      <p class="text-gray-500">in 24 minutes</p>
+    </div>
+    <div class="mt-6 space-y-2">
+      <div class="flex justify-between bg-gray-50 p-3 rounded">
+        <span>Fajr</span><span>04:30</span>
+      </div>
+      <div class="flex justify-between bg-gray-50 p-3 rounded">
+        <span>Dhuhr</span><span>12:05</span>
+      </div>
+      <div class="flex justify-between bg-green-100 p-3 rounded border border-green-400">
+        <span>Asr</span><span>15:29</span>
+      </div>
+      <div class="flex justify-between bg-gray-50 p-3 rounded">
+        <span>Maghrib</span><span>18:25</span>
+      </div>
+      <div class="flex justify-between bg-gray-50 p-3 rounded">
+        <span>Isha</span><span>19:40</span>
+      </div>
+    </div>
+  </main>
+  <div id="nav-bar"></div>
+  <script src="../load-components.js"></script>
+</body>
+</html>
