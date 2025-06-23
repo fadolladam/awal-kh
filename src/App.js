@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Utility to ensure Inter font and Tailwind CSS are loaded and global styles
 const setupGlobalStyles = () => {
@@ -12,10 +12,9 @@ const setupGlobalStyles = () => {
     head.appendChild(interLink);
   }
 
-  // Add Tailwind CSS CDN - THIS IS THE KEY ADDITION FOR UI/UX
+  // Add Tailwind CSS CDN
   const tailwindScript = document.createElement('script');
   tailwindScript.src = 'https://cdn.tailwindcss.com';
-  // Ensure it's added only once
   if (!head.querySelector(`script[src="${tailwindScript.src}"]`)) {
     head.appendChild(tailwindScript);
   }
@@ -46,7 +45,7 @@ const setupGlobalStyles = () => {
     }
     /* Basic Arabic font for Quran page - improve as needed */
     .font-arabic {
-        font-family: 'Amiri', serif; /* A common Arabic font, you might need to load it */
+        font-family: 'Amiri', serif;
     }
     /* For image carousel, ensuring aspect ratio */
     .aspect-square {
@@ -73,7 +72,7 @@ const setupGlobalStyles = () => {
 // Call global style setup once
 setupGlobalStyles();
 
-// Mock Data for the app
+// Mock Data for the app (some of these will be replaced by API fetches)
 const mockPrayerTimes = [
   { name: 'Fajr', time: '05:30 AM', isCurrent: false, isNext: false },
   { name: 'Dhuhr', time: '01:00 PM', isCurrent: true, isNext: false },
@@ -109,7 +108,7 @@ const mockVideos = [
 ];
 
 const mockImages = [
-  { id: 1, url: "https://placehold.co/360x640/8BC34A/ffffff?text=Wallpaper+1", alt: "Islamic Wallpaper 1" }, // Vertical size
+  { id: 1, url: "https://placehold.co/360x640/8BC34A/ffffff?text=Wallpaper+1", alt: "Islamic Wallpaper 1" },
   { id: 2, url: "https://placehold.co/360x640/CDDC39/ffffff?text=Wallpaper+2", alt: "Islamic Wallpaper 2" },
   { id: 3, url: "https://placehold.co/360x640/FFEB3B/ffffff?text=Wallpaper+3", alt: "Islamic Wallpaper 3" },
   { id: 4, url: "https://placehold.co/360x640/FFC107/ffffff?text=Wallpaper+4", alt: "Islamic Wallpaper 4" },
@@ -123,7 +122,7 @@ const mockQuotes = [
   {
     quote: "Do good deeds properly, sincerely and moderately. Always remember that your deeds alone will not save you, and that the most beloved deed to Allah is that which is done regularly even if it is small.",
     author: "Prophet Muhammad (PBUH)",
-    bgImage: "https://placehold.co/600x600/4CAF50/ffffff?text=Quote+BG+1", // 1:1 aspect ratio
+    bgImage: "https://placehold.co/600x600/4CAF50/ffffff?text=Quote+BG+1",
   },
   {
     quote: "When you stand up for prayer, think of it as your last prayer.",
@@ -149,30 +148,29 @@ const mockDuas = [
 ];
 
 const mockSurahs = [
-  { id: 1, name: "Al-Fatihah", english: "The Opening", verses: 7, arabic_name: "الفاتحة" },
-  { id: 2, name: "Al-Baqarah", english: "The Cow", verses: 286, arabic_name: "البقرة" },
-  { id: 3, name: "Al-Imran", english: "The Family of Imran", verses: 200, arabic_name: "آل عمران" },
-  { id: 18, name: "Al-Kahf", english: "The Cave", verses: 110, arabic_name: "الكهف" },
-  { id: 36, name: "Ya-Sin", english: "Ya-Sin", verses: 83, arabic_name: "يس" },
-  { id: 55, name: "Ar-Rahman", english: "The Most Gracious", verses: 78, arabic_name: "الرحمن" },
-  { id: 112, name: "Al-Ikhlas", english: "The Purity", verses: 4, arabic_name: "الإخلاص" },
-  { id: 113, name: "Al-Falaq", english: "The Daybreak", verses: 5, arabic_name: "الفلق" },
-  { id: 114, name: "An-Nas", english: "Mankind", verses: 6, arabic_name: "الناس" },
+  { id: 1, name: "Al-Fatihah", english: "The Opening", verses: 7, arabic_name: "الفاتحة", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+1" },
+  { id: 2, name: "Al-Baqarah", english: "The Cow", verses: 286, arabic_name: "البقرة", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+2" },
+  { id: 3, name: "Al-Imran", english: "The Family of Imran", verses: 200, arabic_name: "آل عمران", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+3" },
+  { id: 18, name: "Al-Kahf", english: "The Cave", verses: 110, arabic_name: "الكهف", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+18" },
+  { id: 36, name: "Ya-Sin", english: "Ya-Sin", verses: 83, arabic_name: "يس", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+36" },
+  { id: 55, name: "Ar-Rahman", english: "The Most Gracious", verses: 78, arabic_name: "الرحمن", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+55" },
+  { id: 112, name: "Al-Ikhlas", english: "The Purity", verses: 4, arabic_name: "الإخلاص", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+112" },
+  { id: 113, name: "Al-Falaq", english: "The Daybreak", verses: 5, arabic_name: "الفلق", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+113" },
+  { id: 114, name: "An-Nas", english: "Mankind", verses: 6, arabic_name: "الناس", mushafPage: "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+114" },
 ];
 
 // Main App component
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [splashStep, setSplashStep] = useState(0);
-  // Removed showAuthScreen state as per user request
-  const [currentPage, setCurrentPage] = useState('/'); // Current page after splash/auth
+  const [currentPage, setCurrentPage] = useState('/');
 
   // Splash screen images
   const splashImages = [
-    "https://placehold.co/720x1280/10b981/ffffff?text=Welcome", // 16:9 for phone, adjust as needed
-    "https://placehold.co/720x1280/059669/ffffff?text=Prayer+Times",
-    "https://placehold.co/720x1280/047857/ffffff?text=Quran+%26+Duas",
-    "https://placehold.co/720x1280/065F46/ffffff?text=Inspiration",
+    "https://placehold.co/720x1280/10b981/ffffff?text=Welcome+to+Islamic+App",
+    "https://placehold.co/720x1280/059669/ffffff?text=Accurate+Prayer+Times",
+    "https://placehold.co/720x1280/047857/ffffff?text=Holy+Quran+%26+Duas",
+    "https://placehold.co/720x1280/065F46/ffffff?text=Daily+Inspiration",
   ];
 
   const splashScreens = [
@@ -203,18 +201,15 @@ const App = () => {
       setSplashStep(splashStep + 1);
     } else {
       setShowSplash(false);
-      // Directly go to home after splash, skipping auth screen
       setCurrentPage('/');
     }
   };
 
   const handleSkipSplash = () => {
     setShowSplash(false);
-    // Directly go to home after splash, skipping auth screen
     setCurrentPage('/');
   };
 
-  // Handler for navigation links
   const handleNavLinkClick = (path) => {
     setCurrentPage(path);
   };
@@ -226,9 +221,8 @@ const App = () => {
         className="min-h-screen flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in bg-cover bg-center"
         style={{ backgroundImage: `url(${currentSplash.bgImage})` }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div> {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative z-10 flex flex-col items-center justify-center h-full">
-          {/* No icon needed since background is an image */}
           <h1 className="text-4xl font-bold mb-4">{currentSplash.title}</h1>
           <p className="text-lg mb-8 max-w-md">{currentSplash.description}</p>
           <div className="flex space-x-4 mb-8">
@@ -246,7 +240,7 @@ const App = () => {
               </button>
             ) : (
               <button
-                onClick={handleNextSplash} // This will directly go to the main app
+                onClick={handleNextSplash}
                 className="bg-white text-emerald-700 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 transform hover:scale-105"
               >
                 Get Started
@@ -264,18 +258,13 @@ const App = () => {
     );
   }
 
-  // Removed if (showAuthScreen) block
-
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50">
-      {/* Removed the header to make it seamless */}
-      <main className="flex-grow pb-16"> {/* Add padding-bottom to account for fixed nav */}
+      <main className="flex-grow pb-16">
         {renderPage(currentPage, handleNavLinkClick)}
       </main>
 
-      {/* Fixed bottom navigation bar, mimicking default.vue layout */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-white shadow-lg flex justify-around py-2 border-t border-gray-200 rounded-t-lg z-50">
-        {/* NuxtLink simulation using simple buttons with styling */}
         <NavLink path="/" currentPage={currentPage} onClick={handleNavLinkClick} icon="🏠" label="Home" />
         <NavLink path="/prayer" currentPage={currentPage} onClick={handleNavLinkClick} icon="🕌" label="Prayer" />
         <NavLink path="/quran" currentPage={currentPage} onClick={handleNavLinkClick} icon="📖" label="Quran" />
@@ -286,7 +275,6 @@ const App = () => {
   );
 };
 
-// Helper component for navigation links
 const NavLink = ({ path, currentPage, onClick, icon, label }) => (
   <button
     onClick={() => onClick(path)}
@@ -299,13 +287,12 @@ const NavLink = ({ path, currentPage, onClick, icon, label }) => (
   </button>
 );
 
-// Function to render the correct page component based on currentPage state
 const renderPage = (currentPage, handleNavLinkClick) => {
   switch (currentPage) {
     case '/':
       return <HomePage prayerTimes={mockPrayerTimes} quranVerses={mockQuranVerses} videos={mockVideos} images={mockImages} quotes={mockQuotes} />;
     case '/prayer':
-      return <PrayerPage prayerTimes={mockPrayerTimes} />;
+      return <PrayerPage />;
     case '/quran':
       return <QuranPage surahs={mockSurahs} />;
     case '/duas':
@@ -317,21 +304,146 @@ const renderPage = (currentPage, handleNavLinkClick) => {
   }
 };
 
-// --- Page Components (mimicking pages/*.vue files) ---
+// --- Page Components ---
 
 const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
-  // Use a single state for the currently displayed prayer to cycle through all
-  const [displayedPrayerIndex, setDisplayedPrayerIndex] = useState(prayerTimes.findIndex(p => p.isCurrent));
+  const [displayedPrayerIndex, setDisplayedPrayerIndex] = useState(0); // Start with Fajr for consistent display
+  const [currentPrayerTimes, setCurrentPrayerTimes] = useState(mockPrayerTimes); // Using mock for now, will be replaced by API
+  const [city, setCity] = useState(localStorage.getItem('prayerCity') || 'London');
+  const [country, setCountry] = useState(localStorage.getItem('prayerCountry') || 'UK');
+  const [calculationMethod, setCalculationMethod] = useState(localStorage.getItem('prayerMethod') || '2'); // Default to ISNA
+  const [isLoadingPrayerTimes, setIsLoadingPrayerTimes] = useState(false);
+  const [prayerError, setPrayerError] = useState(null);
+
+  const prayerCalculationMethods = [
+    { id: '1', name: 'University of Islamic Sciences, Karachi' },
+    { id: '2', name: 'Islamic Society of North America (ISNA)' },
+    { id: '3', name: 'Muslim World League' },
+    { id: '4', name: 'Umm Al-Qura University, Makkah' },
+    { id: '5', name: 'Egyptian General Authority of Survey' },
+    { id: '7', name: 'Institute of Geophysics, University of Tehran' },
+    { id: '8', name: 'Kuwait' },
+    { id: '9', name: 'Qatar' },
+    { id: '10', name: 'Majlis Ugama Islam Singapura (MUIS)' },
+    { id: '11', name: 'Union Des Organisations Islamiques De France' },
+    { id: '12', name: 'Russia' },
+    { id: '13', name: 'Dubai (fixed data)' },
+    { id: '14', name: 'Moonsighting Committee (Fixed Data)' },
+    { id: '15', name: 'North America (Fixed Data)' },
+    { id: '16', name: 'Turkey (Diyanet)' },
+    { id: '17', name: 'MWL (Fixed Data)' },
+    { id: '18', name: 'Pakistan (Fixed Data)' },
+    { id: '99', name: 'Custom (Requires parameters not in this demo)' },
+  ];
+
+  const fetchPrayerTimes = useCallback(async () => {
+    setIsLoadingPrayerTimes(true);
+    setPrayerError(null);
+    try {
+      // Simulate API call for demonstration. In a real app, use the actual Aladhan API.
+      // Example Aladhan API URL: https://api.aladhan.com/v1/timingsByCity?city=London&country=UK&method=2
+      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=${calculationMethod}`);
+      const data = await response.json();
+
+      if (data.code === 200 && data.status === "OK") {
+        const timings = data.data.timings;
+        const fetchedTimes = [
+          { name: 'Fajr', time: timings.Fajr },
+          { name: 'Dhuhr', time: timings.Dhuhr },
+          { name: 'Asr', time: timings.Asr },
+          { name: 'Maghrib', time: timings.Maghrib },
+          { name: 'Isha', time: timings.Isha },
+        ].filter(t => t.time !== '00:00'); // Filter out invalid times if any
+
+        // Determine current and next prayer dynamically
+        const now = new Date();
+        const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+        let current = null;
+        let next = null;
+        let foundCurrent = false;
+
+        const updatedPrayerTimes = fetchedTimes.map((p, index) => {
+          const [hours, minutes] = p.time.split(':').map(Number);
+          const prayerTimeInMinutes = hours * 60 + minutes;
+
+          if (currentTimeInMinutes >= prayerTimeInMinutes && !foundCurrent) {
+            current = p.name;
+          } else if (!foundCurrent && currentTimeInMinutes < prayerTimeInMinutes) {
+            next = p.name;
+            foundCurrent = true; // Mark as found to get the very next one
+          }
+
+          return { ...p, isCurrent: false, isNext: false }; // Reset flags
+        });
+
+        // Set flags based on determined current/next
+        let nextPrayerFound = false;
+        const finalPrayerTimes = updatedPrayerTimes.map((p, index) => {
+          let isCurrent = false;
+          let isNext = false;
+
+          const [hours, minutes] = p.time.split(':').map(Number);
+          const prayerTimeInMinutes = hours * 60 + minutes;
+
+          if (current === null && index === 0 && currentTimeInMinutes < prayerTimeInMinutes) {
+              // If no prayer has passed yet today, Fajr is the next/first current
+              isCurrent = true;
+          } else if (p.name === current && currentTimeInMinutes >= prayerTimeInMinutes) {
+              isCurrent = true;
+          }
+
+          // Find the next prayer after the current time, wrapping around to next day if needed
+          if (prayerTimeInMinutes > currentTimeInMinutes && !nextPrayerFound) {
+              isNext = true;
+              nextPrayerFound = true;
+          }
+
+          return { ...p, isCurrent, isNext };
+        });
+
+        // If no 'next' prayer found (all prayers for today have passed), the next prayer is Fajr of tomorrow
+        if (!nextPrayerFound && finalPrayerTimes.length > 0) {
+            finalPrayerTimes[0].isNext = true; // Mark Fajr as next
+        }
+
+
+        setCurrentPrayerTimes(finalPrayerTimes);
+        // Set the displayed prayer to the actual current prayer or Fajr if no current
+        setDisplayedPrayerIndex(finalPrayerTimes.findIndex(p => p.isCurrent) !== -1
+          ? finalPrayerTimes.findIndex(p => p.isCurrent)
+          : finalPrayerTimes.findIndex(p => p.name === 'Fajr') // Default to Fajr
+        );
+
+        localStorage.setItem('prayerCity', city);
+        localStorage.setItem('prayerCountry', country);
+        localStorage.setItem('prayerMethod', calculationMethod);
+
+      } else {
+        setPrayerError(data.data.message || "Failed to fetch prayer times. Please check city/country.");
+      }
+    } catch (error) {
+      console.error("Error fetching prayer times:", error);
+      setPrayerError("Could not fetch prayer times. Network error or invalid location.");
+    } finally {
+      setIsLoadingPrayerTimes(false);
+    }
+  }, [city, country, calculationMethod]); // Depend on city, country, method
+
+  useEffect(() => {
+    fetchPrayerTimes(); // Initial fetch
+    const interval = setInterval(fetchPrayerTimes, 60 * 60 * 1000); // Refresh every hour
+    return () => clearInterval(interval);
+  }, [fetchPrayerTimes]);
 
   const handleNextPrayerDisplay = () => {
-    setDisplayedPrayerIndex((prevIndex) => (prevIndex + 1) % prayerTimes.length);
+    setDisplayedPrayerIndex((prevIndex) => (prevIndex + 1) % currentPrayerTimes.length);
   };
   const handlePrevPrayerDisplay = () => {
-    setDisplayedPrayerIndex((prevIndex) => (prevIndex - 1 + prayerTimes.length) % prayerTimes.length);
+    setDisplayedPrayerIndex((prevIndex) => (prevIndex - 1 + currentPrayerTimes.length) % currentPrayerTimes.length);
   };
 
-  const currentDisplayedPrayer = prayerTimes[displayedPrayerIndex];
-  const nextPrayerInSequence = prayerTimes[(displayedPrayerIndex + 1) % prayerTimes.length];
+  const currentDisplayedPrayer = currentPrayerTimes[displayedPrayerIndex];
+  const nextPrayerInSequence = currentPrayerTimes[(displayedPrayerIndex + 1) % currentPrayerTimes.length];
 
   // Random Quran verse
   const [randomVerse, setRandomVerse] = useState({});
@@ -356,34 +468,16 @@ const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
 
   const handleDownloadImage = (imageUrl) => {
     console.log(`Simulating download for: ${imageUrl}`);
-    // In a real app, you would fetch the image and trigger a download.
-    // For this preview, we just log and use a placeholder alert.
     alert(`Downloading image: ${imageUrl}`);
-    // A more robust download (client-side) would involve:
-    // fetch(imageUrl)
-    //   .then(response => response.blob())
-    //   .then(blob => {
-    //     const url = window.URL.createObjectURL(blob);
-    //     const a = document.createElement('a');
-    //     a.href = url;
-    //     a.download = imageUrl.split('/').pop() || 'wallpaper.png';
-    //     document.body.appendChild(a);
-    //     a.click();
-    //     a.remove();
-    //     window.URL.revokeObjectURL(url);
-    //   })
-    //   .catch(error => console.error('Download failed:', error));
   };
 
   const handleShareQuote = (quoteText) => {
     console.log(`Simulating share for: "${quoteText}"`);
-    // In a real app, you would use Navigator Share API or similar.
     alert(`Sharing quote: "${quoteText}"`);
   };
 
   return (
     <div className="p-4 space-y-6 animate-fade-in">
-      {/* Welcome Banner - Top of the "seamless" app */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white p-6 rounded-b-lg shadow-xl text-center">
         <h1 className="text-3xl font-bold mb-2">Assalamu Alaikum!</h1>
         <p className="text-lg">Welcome to your Islamic Companion.</p>
@@ -400,12 +494,22 @@ const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
           </svg>
         </button>
         <div className="text-center flex-grow">
-          <p className="text-lg font-semibold text-gray-700">
-            Current: <span className="text-emerald-700 font-bold text-xl">{currentDisplayedPrayer.name} ({currentDisplayedPrayer.time})</span>
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Next: {nextPrayerInSequence.name} at {nextPrayerInSequence.time}
-          </p>
+          {isLoadingPrayerTimes ? (
+            <p className="text-lg text-gray-700">Loading prayer times...</p>
+          ) : prayerError ? (
+            <p className="text-lg text-red-500">{prayerError}</p>
+          ) : currentDisplayedPrayer ? (
+            <>
+              <p className="text-lg font-semibold text-gray-700">
+                Current: <span className="text-emerald-700 font-bold text-xl">{currentDisplayedPrayer.name} ({currentDisplayedPrayer.time})</span>
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Next: {nextPrayerInSequence.name} at {nextPrayerInSequence.time}
+              </p>
+            </>
+          ) : (
+            <p className="text-lg text-gray-700">No prayer data available.</p>
+          )}
         </div>
         <button
           onClick={handleNextPrayerDisplay}
@@ -464,7 +568,7 @@ const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
       {/* Image Portrait Carousel for Download */}
       <div className="bg-white p-5 rounded-lg shadow-md animate-slide-up">
         <h2 className="text-xl font-semibold text-gray-700 mb-3">Islamic Wallpapers</h2>
-        <div className="relative overflow-hidden rounded-lg aspect-vertical w-full max-w-sm mx-auto"> {/* Enforce vertical aspect ratio */}
+        <div className="relative overflow-hidden rounded-lg aspect-vertical w-full max-w-sm mx-auto">
           <img
             src={images[currentImageIndex].url}
             alt={images[currentImageIndex].alt}
@@ -503,7 +607,7 @@ const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
       {/* Daily Quote Carousel */}
       <div className="bg-white p-5 rounded-lg shadow-md animate-slide-up">
         <h2 className="text-xl font-semibold text-gray-700 mb-3">Daily Inspiration</h2>
-        <div className="relative w-full aspect-square rounded-lg overflow-hidden flex items-center justify-center"> {/* Enforce 1:1 aspect ratio */}
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden flex items-center justify-center">
           <img
             src={quotes[currentQuoteIndex].bgImage}
             alt="Quote Background"
@@ -546,8 +650,121 @@ const HomePage = ({ prayerTimes, quranVerses, videos, images, quotes }) => {
   );
 };
 
-const PrayerPage = ({ prayerTimes }) => {
+const PrayerPage = () => {
+  const [city, setCity] = useState(localStorage.getItem('prayerCity') || '');
+  const [country, setCountry] = useState(localStorage.getItem('prayerCountry') || '');
+  const [calculationMethod, setCalculationMethod] = useState(localStorage.getItem('prayerMethod') || '2'); // Default to ISNA
+  const [prayerTimes, setPrayerTimes] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  const prayerCalculationMethods = [
+    { id: '1', name: 'University of Islamic Sciences, Karachi' },
+    { id: '2', name: 'Islamic Society of North America (ISNA)' },
+    { id: '3', name: 'Muslim World League' },
+    { id: '4', name: 'Umm Al-Qura University, Makkah' },
+    { id: '5', name: 'Egyptian General Authority of Survey' },
+    { id: '7', name: 'Institute of Geophysics, University of Tehran' },
+    { id: '8', name: 'Kuwait' },
+    { id: '9', name: 'Qatar' },
+    { id: '10', name: 'Majlis Ugama Islam Singapura (MUIS)' },
+    { id: '11', name: 'Union Des Organisations Islamiques De France' },
+    { id: '12', name: 'Russia' },
+    { id: '13', name: 'Dubai (fixed data)' },
+    { id: '14', name: 'Moonsighting Committee (Fixed Data)' },
+    { id: '15', name: 'North America (Fixed Data)' },
+    { id: '16', name: 'Turkey (Diyanet)' },
+    { id: '17', name: 'MWL (Fixed Data)' },
+    { id: '18', name: 'Pakistan (Fixed Data)' },
+    { id: '99', name: 'Custom (Requires parameters not in this demo)' }, // Custom method
+  ];
+
+  const fetchPrayerTimes = useCallback(async () => {
+    if (!city || !country) {
+      setError("Please enter both city and country.");
+      setPrayerTimes([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const formattedDate = currentDate.toLocaleDateString('en-US').split('/').join('-'); // MM-DD-YYYY
+      const apiUrl = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${calculationMethod}&date=${formattedDate}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data.code === 200 && data.status === "OK") {
+        const timings = data.data.timings;
+        const fetched = [
+          { name: 'Fajr', time: timings.Fajr },
+          { name: 'Sunrise', time: timings.Sunrise },
+          { name: 'Dhuhr', time: timings.Dhuhr },
+          { name: 'Asr', time: timings.Asr },
+          { name: 'Maghrib', time: timings.Maghrib },
+          { name: 'Isha', time: timings.Isha },
+        ].filter(t => t.time !== '00:00'); // Remove invalid entries
+
+        // Determine current and next prayer dynamically for highlighting
+        const now = new Date();
+        const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+        let currentPrayerName = null;
+        let nextPrayerName = null;
+        let foundNext = false;
+
+        const processedTimes = fetched.map(p => {
+          const [hours, minutes] = p.time.split(':').map(Number);
+          const prayerTimeInMinutes = hours * 60 + minutes;
+
+          let isCurrent = false;
+          let isNext = false;
+
+          // Mark current prayer
+          if (currentTimeInMinutes >= prayerTimeInMinutes) {
+            currentPrayerName = p.name;
+          }
+
+          // Mark next prayer
+          if (prayerTimeInMinutes > currentTimeInMinutes && !foundNext) {
+            nextPrayerName = p.name;
+            foundNext = true;
+          }
+          return { ...p, isCurrent: false, isNext: false }; // Reset for fresh marking
+        });
+
+        const finalPrayerTimes = processedTimes.map(p => ({
+          ...p,
+          isCurrent: p.name === currentPrayerName,
+          isNext: p.name === nextPrayerName,
+        }));
+
+        // If no 'next' prayer found (all passed today), mark tomorrow's Fajr as next
+        if (!nextPrayerName && finalPrayerTimes.length > 0) {
+          finalPrayerTimes[0].isNext = true; // Assumes Fajr is always the first prayer
+        }
+
+        setPrayerTimes(finalPrayerTimes);
+        localStorage.setItem('prayerCity', city);
+        localStorage.setItem('prayerCountry', country);
+        localStorage.setItem('prayerMethod', calculationMethod);
+
+      } else {
+        setError(data.data.message || "Failed to fetch prayer times. Please check city/country.");
+        setPrayerTimes([]);
+      }
+    } catch (error) {
+      console.error("Error fetching prayer times:", error);
+      setError("Could not fetch prayer times. Network error or invalid location.");
+      setPrayerTimes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [city, country, calculationMethod, currentDate]);
+
+  useEffect(() => {
+    fetchPrayerTimes();
+  }, [fetchPrayerTimes]); // Re-fetch when dependencies change
 
   const getDayName = (date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -575,8 +792,59 @@ const PrayerPage = ({ prayerTimes }) => {
 
   return (
     <div className="p-4 animate-fade-in">
-      <div className="bg-white p-5 rounded-lg shadow-md text-center mb-4">
-        <h1 className="text-3xl font-extrabold text-emerald-700 mb-2">Prayer Times</h1>
+      <div className="bg-white p-5 rounded-lg shadow-md mb-4">
+        <h1 className="text-3xl font-extrabold text-emerald-700 mb-4 text-center">Prayer Times</h1>
+
+        {/* Location and Method Selection */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
+            <input
+              type="text"
+              id="city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g., London"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+            <input
+              type="text"
+              id="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="e.g., UK"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="method" className="block text-sm font-medium text-gray-700 mb-1">Calculation Method</label>
+            <select
+              id="method"
+              value={calculationMethod}
+              onChange={(e) => setCalculationMethod(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+            >
+              {prayerCalculationMethods.map((method) => (
+                <option key={method.id} value={method.id}>
+                  {method.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={fetchPrayerTimes}
+            disabled={isLoading || !city || !country}
+            className="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Fetching...' : 'Get Prayer Times'}
+          </button>
+        </div>
+
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
         <div className="flex justify-between items-center mt-4 mb-4">
           <button onClick={handlePrevDay} className="text-emerald-600 p-2 rounded-full hover:bg-emerald-100 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -593,33 +861,39 @@ const PrayerPage = ({ prayerTimes }) => {
             </svg>
           </button>
         </div>
-        {/* Changed to a single column flow for "line by line" presentation */}
         <div className="flex flex-col gap-3 mt-6">
-          {prayerTimes.map((prayer) => (
-            <div
-              key={prayer.name}
-              className={`p-4 rounded-lg shadow-sm flex items-center justify-between transition-all duration-300 ${
-                prayer.isCurrent
-                  ? 'bg-emerald-100 border border-emerald-500'
-                  : prayer.isNext
-                  ? 'bg-blue-100 border border-blue-500'
-                  : 'bg-gray-50'
-              }`}
-            >
-              <p className="text-lg font-medium text-gray-800">{prayer.name}</p>
-              <p className={`text-2xl font-bold ${prayer.isCurrent ? 'text-emerald-700' : prayer.isNext ? 'text-blue-700' : 'text-gray-600'}`}>
-                {prayer.time}
-              </p>
-            </div>
-          ))}
+          {prayerTimes.length > 0 ? (
+            prayerTimes.map((prayer) => (
+              <div
+                key={prayer.name}
+                className={`p-4 rounded-lg shadow-sm flex items-center justify-between transition-all duration-300 ${
+                  prayer.isCurrent
+                    ? 'bg-emerald-100 border border-emerald-500'
+                    : prayer.isNext
+                    ? 'bg-blue-100 border border-blue-500'
+                    : 'bg-gray-50'
+                }`}
+              >
+                <p className="text-lg font-medium text-gray-800">{prayer.name}</p>
+                <p className={`text-2xl font-bold ${prayer.isCurrent ? 'text-emerald-700' : prayer.isNext ? 'text-blue-700' : 'text-gray-600'}`}>
+                  {prayer.time}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500">Enter location and get prayer times.</p>
+          )}
         </div>
-        <p className="text-gray-500 text-sm mt-4">Times are estimates for demonstration purposes.</p>
+        <p className="text-gray-500 text-sm mt-4">Times are fetched from Aladhan API and are estimates.</p>
       </div>
     </div>
   );
 };
 
 const QuranPage = ({ surahs }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('verses'); // 'verses' or 'mushaf'
+
   // Load saved progress from local storage on component mount
   const getSavedProgress = () => {
     try {
@@ -638,7 +912,7 @@ const QuranPage = ({ surahs }) => {
   };
 
   const [selectedSurah, setSelectedSurah] = useState(getSavedProgress().surah);
-  const [selectedAyahIndex, setSelectedAyahIndex] = useState(getSavedProgress().ayahIndex); // Store index for easier array access
+  const [selectedAyahIndex, setSelectedAyahIndex] = useState(getSavedProgress().ayahIndex);
 
   // Save progress to local storage whenever selectedSurah or selectedAyahIndex changes
   useEffect(() => {
@@ -655,13 +929,13 @@ const QuranPage = ({ surahs }) => {
     }
   }, [selectedSurah, selectedAyahIndex]);
 
-
   const handleSurahClick = (surah) => {
     setSelectedSurah(surah);
     setSelectedAyahIndex(0); // Reset to first ayah when new surah selected
+    setIsSidebarOpen(false); // Close sidebar after selection
   };
 
-  // Simplified mock Ayahs for demonstration, to fit in a reasonable size
+  // Simplified mock Ayahs for demonstration
   const mockAyahContent = {
     1: [ // Al-Fatihah
       { arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", english: "In the name of Allah, the Entirely Merciful, the Especially Merciful." },
@@ -672,7 +946,6 @@ const QuranPage = ({ surahs }) => {
       { arabic: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ", english: "Guide us to the straight path -" },
       { arabic: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ", english: "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] wrath or of those who are astray." },
     ],
-    // Add more mock Ayahs for other surahs as needed for a more complete simulation
     2: [ // Al-Baqarah (first few for example)
       { arabic: "الم", english: "Alif, Lam, Meem." },
       { arabic: "ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ", english: "This is the Book about which there is no doubt, a guidance for those conscious of Allah -" },
@@ -680,17 +953,37 @@ const QuranPage = ({ surahs }) => {
     ]
   };
 
-  // Helper to get ayah content for the selected surah
   const getAyahsForSelectedSurah = () => {
     if (!selectedSurah) return [];
     return mockAyahContent[selectedSurah.id] || [];
   };
 
   return (
-    <div className="p-4 flex flex-col lg:flex-row gap-4 animate-fade-in">
-      <div className="lg:w-1/3 bg-white p-4 rounded-lg shadow-md max-h-[calc(100vh-140px)] overflow-y-auto">
-        <h2 className="text-xl font-bold text-emerald-700 mb-4 text-center">Surahs</h2>
-        <ul className="space-y-2">
+    <div className="relative min-h-screen animate-fade-in">
+      {/* Burger Icon */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed top-4 left-4 z-50 bg-emerald-600 text-white p-3 rounded-full shadow-lg hover:bg-emerald-700 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-40 transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex justify-between items-center p-4 bg-emerald-700 text-white rounded-tr-lg">
+          <h2 className="text-xl font-bold">Surahs</h2>
+          <button onClick={() => setIsSidebarOpen(false)} className="p-1 rounded-full hover:bg-emerald-600">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <ul className="p-4 space-y-2 max-h-[calc(100vh-80px)] overflow-y-auto">
           {surahs.map((surah) => (
             <li
               key={surah.id}
@@ -710,98 +1003,143 @@ const QuranPage = ({ surahs }) => {
         </ul>
       </div>
 
-      <div className="lg:w-2/3 bg-white p-4 rounded-lg shadow-md max-h-[calc(100vh-140px)] overflow-y-auto relative">
-        {selectedSurah ? (
-          <div>
-            <h2 className="text-2xl font-bold text-center text-emerald-700 mb-4 py-2 border-b border-gray-200">
-              {selectedSurah.name} <span className="text-lg text-gray-600">({selectedSurah.english})</span>
-            </h2>
-            {selectedSurah && (
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <span className="text-gray-500 text-sm">Last read:</span>
-                <span className="font-semibold text-emerald-700">
-                  {selectedSurah.name} : Ayah {selectedAyahIndex + 1}
-                </span>
-              </div>
-            )}
-            <div className="space-y-6 mt-4">
-              {getAyahsForSelectedSurah().map((ayahData, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedAyahIndex(index)}
-                  className={`border-b pb-4 last:border-b-0 border-gray-100 cursor-pointer p-2 rounded-lg transition-all ${
-                    selectedAyahIndex === index ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
-                  }`}
+      {/* Content Area */}
+      <div className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-72' : 'ml-0'}`}>
+        <div className="bg-white p-4 rounded-lg shadow-md min-h-[calc(100vh-100px)]">
+          {selectedSurah ? (
+            <div>
+              <h2 className="text-2xl font-bold text-center text-emerald-700 mb-4 py-2 border-b border-gray-200">
+                {selectedSurah.name} <span className="text-lg text-gray-600">({selectedSurah.english})</span>
+              </h2>
+              <div className="flex justify-center mb-4 border-b border-gray-200">
+                <button
+                  onClick={() => setCurrentView('verses')}
+                  className={`py-2 px-4 text-center text-lg font-medium ${currentView === 'verses' ? 'text-emerald-700 border-b-2 border-emerald-700' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                  <p className="text-2xl text-right font-arabic leading-loose mb-2 rtl:text-right">
-                    <span className="text-emerald-600 font-bold mr-2">{index + 1}.</span>{ayahData.arabic}
+                  Verses & Translation
+                </button>
+                <button
+                  onClick={() => setCurrentView('mushaf')}
+                  className={`py-2 px-4 text-center text-lg font-medium ${currentView === 'mushaf' ? 'text-emerald-700 border-b-2 border-emerald-700' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Mushaf View
+                </button>
+              </div>
+
+              {currentView === 'verses' && (
+                <>
+                  {selectedSurah && (
+                    <div className="flex items-center justify-center space-x-2 mb-4">
+                      <span className="text-gray-500 text-sm">Last read:</span>
+                      <span className="font-semibold text-emerald-700">
+                        {selectedSurah.name} : Ayah {selectedAyahIndex + 1}
+                      </span>
+                    </div>
+                  )}
+                  <div className="space-y-6 mt-4">
+                    {getAyahsForSelectedSurah().map((ayahData, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setSelectedAyahIndex(index)}
+                        className={`border-b pb-4 last:border-b-0 border-gray-100 cursor-pointer p-2 rounded-lg transition-all ${
+                          selectedAyahIndex === index ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <p className="text-2xl text-right font-arabic leading-loose mb-2 rtl:text-right">
+                          <span className="text-emerald-600 font-bold mr-2">{index + 1}.</span>{ayahData.arabic}
+                        </p>
+                        <p className="text-md text-gray-700 leading-relaxed bg-gray-50 p-2 rounded-md">
+                          <span className="font-semibold">Translation:</span> {ayahData.english}
+                        </p>
+                        <button className="mt-3 text-sm text-blue-600 hover:text-blue-800 flex items-center bg-blue-50 px-3 py-1 rounded-full">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13m-6 2l-6-3-6 3V7l6-3 6 3v13z" />
+                          </svg>
+                          Play Audio
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {getAyahsForSelectedSurah().length > 0 && (
+                    <div className="flex justify-between items-center mt-6">
+                      <button
+                        onClick={() => setSelectedAyahIndex(prev => Math.max(0, prev - 1))}
+                        disabled={selectedAyahIndex === 0}
+                        className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <span className="text-lg font-bold text-gray-700">
+                        Ayah {selectedAyahIndex + 1} of {getAyahsForSelectedSurah().length}
+                      </span>
+                      <button
+                        onClick={() => setSelectedAyahIndex(prev => Math.min(getAyahsForSelectedSurah().length - 1, prev + 1))}
+                        disabled={selectedAyahIndex === getAyahsForSelectedSurah().length - 1}
+                        className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                  {selectedSurah.verses > getAyahsForSelectedSurah().length && (
+                    <p className="text-center text-gray-500 mt-4 text-sm">
+                      Only a few verses displayed for demonstration. Full Surah has {selectedSurah.verses} verses.
+                    </p>
+                  )}
+                </>
+              )}
+
+              {currentView === 'mushaf' && (
+                <div className="flex flex-col items-center justify-center p-4">
+                  <p className="text-gray-600 text-center mb-4">
+                    Displaying a simulated Mushaf page for {selectedSurah.name}.
                   </p>
-                  <p className="text-md text-gray-700 leading-relaxed bg-gray-50 p-2 rounded-md">
-                    <span className="font-semibold">Translation:</span> {ayahData.english}
+                  <div className="border border-gray-300 shadow-lg rounded-lg overflow-hidden max-w-sm w-full">
+                    <img
+                      src={selectedSurah.mushafPage}
+                      alt={`Mushaf page for ${selectedSurah.name}`}
+                      className="w-full h-auto object-contain"
+                      onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/700x1000/F8F8F8/000000?text=Mushaf+Page+Placeholder"; }}
+                    />
+                  </div>
+                  <p className="text-gray-500 text-sm mt-4">
+                    This is a placeholder image representing a Mushaf page. Actual Quran pages require extensive data.
                   </p>
-                  <button className="mt-3 text-sm text-blue-600 hover:text-blue-800 flex items-center bg-blue-50 px-3 py-1 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13m-6 2l-6-3-6 3V7l6-3 6 3v13z" />
-                    </svg>
-                    Play Audio
-                  </button>
                 </div>
-              ))}
+              )}
             </div>
-            {/* Navigation for ayahs */}
-            {selectedSurah && getAyahsForSelectedSurah().length > 0 && (
-              <div className="flex justify-between items-center mt-6">
-                <button
-                  onClick={() => setSelectedAyahIndex(prev => Math.max(0, prev - 1))}
-                  disabled={selectedAyahIndex === 0}
-                  className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <span className="text-lg font-bold text-gray-700">
-                  Ayah {selectedAyahIndex + 1} of {getAyahsForSelectedSurah().length}
-                </span>
-                <button
-                  onClick={() => setSelectedAyahIndex(prev => Math.min(getAyahsForSelectedSurah().length - 1, prev + 1))}
-                  disabled={selectedAyahIndex === getAyahsForSelectedSurah().length - 1}
-                  className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            {selectedSurah.verses > getAyahsForSelectedSurah().length && (
-              <p className="text-center text-gray-500 mt-4 text-sm">
-                Only a few verses displayed for demonstration. Full Surah has {selectedSurah.verses} verses.
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="text-center text-gray-500 py-20">
-            <p className="text-lg">Select a Surah from the left to view its verses.</p>
-          </div>
-        )}
+          ) : (
+            <div className="text-center text-gray-500 py-20">
+              <p className="text-lg">Select a Surah from the sidebar to view its verses.</p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Overlay to close sidebar when clicking outside */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
     </div>
   );
 };
 
 const DuasPage = ({ duas }) => {
-  // Group duas by category
   const categorizedDuas = duas.reduce((acc, dua) => {
     (acc[dua.category] = acc[dua.category] || []).push(dua);
     return acc;
   }, {});
 
-  // State to manage which categories are open/collapsed
-  // Initialize all categories as open by default for visibility in preview
   const [openCategories, setOpenCategories] = useState(
     Object.keys(categorizedDuas).reduce((acc, category) => {
-      acc[category] = true; // All open by default
+      acc[category] = true;
       return acc;
     }, {})
   );
@@ -873,19 +1211,14 @@ const MorePage = ({ handleNavLinkClick }) => {
 
   const handleFeatureClick = (path) => {
     if (path === "/donation") {
-      // Direct render for Donation within More page for simplicity
-      // In a real app, you might have a dedicated component or modal
       alert("Navigating to Donation Page (Simulated)");
-      // For this simulation, we'll just show the DonationPage directly within More
-      // You would typically render a dedicated component here
-      setCurrentPage('/more/donation-subpage'); // A unique path to trigger sub-content
+      setCurrentPage('/more/donation-subpage');
     } else {
       alert(`Navigating to ${path.replace('/', '').replace('-', ' ')} (Simulated)`);
     }
   };
 
-  // State to handle potential sub-navigation within More page
-  const [currentPage, setCurrentPage] = useState('/more'); // Added this useState to manage sub-page within More.
+  const [currentPage, setCurrentPage] = useState('/more');
 
   const DonationPage = () => (
     <div className="p-6 text-xl font-semibold text-gray-800 text-center pt-4 bg-white rounded-lg shadow-md">
@@ -905,7 +1238,6 @@ const MorePage = ({ handleNavLinkClick }) => {
 
   return (
     <div className="p-4">
-      {/* Conditionally render main More grid or sub-page content */}
       {currentPage === '/more' && (
         <div className="bg-white p-5 rounded-lg shadow-md mb-4">
           <h1 className="text-3xl font-extrabold text-emerald-700 mb-6 text-center">More Features</h1>
@@ -915,7 +1247,7 @@ const MorePage = ({ handleNavLinkClick }) => {
                 key={feature.name}
                 onClick={() => {
                   if (feature.path === "/donation") {
-                    setCurrentPage('/more/donation-subpage'); // Change state to show DonationPage
+                    setCurrentPage('/more/donation-subpage');
                   } else {
                     alert(`Navigating to ${feature.name} (Simulated)`);
                   }
@@ -929,12 +1261,11 @@ const MorePage = ({ handleNavLinkClick }) => {
           </div>
         </div>
       )}
-      {/* Render DonationPage directly if path matches */}
       {currentPage === '/more/donation-subpage' && (
         <>
           <DonationPage />
           <button
-            onClick={() => setCurrentPage('/more')} // Go back to the main More page
+            onClick={() => setCurrentPage('/more')}
             className="mt-4 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors block mx-auto"
           >
             Back to More Features
