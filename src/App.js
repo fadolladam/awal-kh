@@ -149,24 +149,23 @@ const mockDuas = [
 ];
 
 const mockSurahs = [
-  { id: 1, name: "Al-Fatihah", english: "The Opening", verses: 7 },
-  { id: 2, name: "Al-Baqarah", english: "The Cow", verses: 286 },
-  { id: 3, name: "Al-Imran", english: "The Family of Imran", verses: 200 },
-  { id: 18, name: "Al-Kahf", english: "The Cave", verses: 110 },
-  { id: 36, name: "Ya-Sin", english: "Ya-Sin", verses: 83 },
-  { id: 55, name: "Ar-Rahman", english: "The Most Gracious", verses: 78 },
-  { id: 112, name: "Al-Ikhlas", english: "The Purity", verses: 4 },
-  { id: 113, name: "Al-Falaq", english: "The Daybreak", verses: 5 },
-  { id: 114, name: "An-Nas", english: "Mankind", verses: 6 },
+  { id: 1, name: "Al-Fatihah", english: "The Opening", verses: 7, arabic_name: "الفاتحة" },
+  { id: 2, name: "Al-Baqarah", english: "The Cow", verses: 286, arabic_name: "البقرة" },
+  { id: 3, name: "Al-Imran", english: "The Family of Imran", verses: 200, arabic_name: "آل عمران" },
+  { id: 18, name: "Al-Kahf", english: "The Cave", verses: 110, arabic_name: "الكهف" },
+  { id: 36, name: "Ya-Sin", english: "Ya-Sin", verses: 83, arabic_name: "يس" },
+  { id: 55, name: "Ar-Rahman", english: "The Most Gracious", verses: 78, arabic_name: "الرحمن" },
+  { id: 112, name: "Al-Ikhlas", english: "The Purity", verses: 4, arabic_name: "الإخلاص" },
+  { id: 113, name: "Al-Falaq", english: "The Daybreak", verses: 5, arabic_name: "الفلق" },
+  { id: 114, name: "An-Nas", english: "Mankind", verses: 6, arabic_name: "الناس" },
 ];
 
 // Main App component
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [splashStep, setSplashStep] = useState(0);
-  const [showAuthScreen, setShowAuthScreen] = useState(false);
+  // Removed showAuthScreen state as per user request
   const [currentPage, setCurrentPage] = useState('/'); // Current page after splash/auth
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate login state
 
   // Splash screen images
   const splashImages = [
@@ -204,25 +203,15 @@ const App = () => {
       setSplashStep(splashStep + 1);
     } else {
       setShowSplash(false);
-      setShowAuthScreen(true);
+      // Directly go to home after splash, skipping auth screen
+      setCurrentPage('/');
     }
   };
 
   const handleSkipSplash = () => {
     setShowSplash(false);
-    setShowAuthScreen(true);
-  };
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setShowAuthScreen(false);
-    setCurrentPage('/'); // Go to home after login
-  };
-
-  const handleUseWithoutLogin = () => {
-    setIsLoggedIn(false);
-    setShowAuthScreen(false);
-    setCurrentPage('/'); // Go to home as guest
+    // Directly go to home after splash, skipping auth screen
+    setCurrentPage('/');
   };
 
   // Handler for navigation links
@@ -257,7 +246,7 @@ const App = () => {
               </button>
             ) : (
               <button
-                onClick={handleNextSplash} // This will trigger setShowAuthScreen(true)
+                onClick={handleNextSplash} // This will directly go to the main app
                 className="bg-white text-emerald-700 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 transform hover:scale-105"
               >
                 Get Started
@@ -275,38 +264,7 @@ const App = () => {
     );
   }
 
-  if (showAuthScreen) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-600 to-emerald-800 flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in">
-        <h1 className="text-4xl font-bold mb-6">Welcome!</h1>
-        <p className="text-lg mb-10 max-w-md">Please choose how you'd like to proceed.</p>
-        <div className="flex flex-col space-y-6 w-full max-w-xs">
-          <input
-            type="email"
-            placeholder="Email (simulated)"
-            className="w-full p-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-          <input
-            type="password"
-            placeholder="Password (simulated)"
-            className="w-full p-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-          <button
-            onClick={handleLogin}
-            className="bg-white text-emerald-700 font-bold py-4 px-6 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 transform hover:scale-105"
-          >
-            Login / Register
-          </button>
-          <button
-            onClick={handleUseWithoutLogin}
-            className="text-white border border-white py-4 px-6 rounded-full hover:bg-white hover:text-emerald-700 transition-colors duration-300 transform hover:scale-105"
-          >
-            Use without Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Removed if (showAuthScreen) block
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50">
@@ -662,38 +620,76 @@ const PrayerPage = ({ prayerTimes }) => {
 };
 
 const QuranPage = ({ surahs }) => {
-  const [selectedSurah, setSelectedSurah] = useState(null);
-  const [selectedAyah, setSelectedAyah] = useState(1);
+  // Load saved progress from local storage on component mount
+  const getSavedProgress = () => {
+    try {
+      const savedSurahId = localStorage.getItem('lastReadSurahId');
+      const savedAyahIndex = localStorage.getItem('lastReadAyahIndex');
+      if (savedSurahId && savedAyahIndex) {
+        const surah = surahs.find(s => s.id === parseInt(savedSurahId));
+        if (surah) {
+          return { surah, ayahIndex: parseInt(savedAyahIndex) };
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load Quran progress from local storage:", e);
+    }
+    return { surah: null, ayahIndex: 0 };
+  };
+
+  const [selectedSurah, setSelectedSurah] = useState(getSavedProgress().surah);
+  const [selectedAyahIndex, setSelectedAyahIndex] = useState(getSavedProgress().ayahIndex); // Store index for easier array access
+
+  // Save progress to local storage whenever selectedSurah or selectedAyahIndex changes
+  useEffect(() => {
+    try {
+      if (selectedSurah) {
+        localStorage.setItem('lastReadSurahId', selectedSurah.id.toString());
+        localStorage.setItem('lastReadAyahIndex', selectedAyahIndex.toString());
+      } else {
+        localStorage.removeItem('lastReadSurahId');
+        localStorage.removeItem('lastReadAyahIndex');
+      }
+    } catch (e) {
+      console.error("Failed to save Quran progress to local storage:", e);
+    }
+  }, [selectedSurah, selectedAyahIndex]);
+
 
   const handleSurahClick = (surah) => {
     setSelectedSurah(surah);
-    setSelectedAyah(1); // Reset to first ayah when new surah selected
+    setSelectedAyahIndex(0); // Reset to first ayah when new surah selected
   };
 
-  const mockAyahs = [
-    "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-    "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-    "الرَّحْمَٰنِ الرَّحِيمِ",
-    "مَالِكِ يَوْمِ الدِّينِ",
-    "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-    "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-    "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
-  ];
+  // Simplified mock Ayahs for demonstration, to fit in a reasonable size
+  const mockAyahContent = {
+    1: [ // Al-Fatihah
+      { arabic: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", english: "In the name of Allah, the Entirely Merciful, the Especially Merciful." },
+      { arabic: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ", english: "All praise is due to Allah, Lord of the worlds -" },
+      { arabic: "الرَّحْمَٰنِ الرَّحِيمِ", english: "The Entirely Merciful, the Especially Merciful," },
+      { arabic: "مَالِكِ يَوْمِ الدِّينِ", english: "Sovereign of the Day of Recompense." },
+      { arabic: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ", english: "It is You we worship and You we ask for help." },
+      { arabic: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ", english: "Guide us to the straight path -" },
+      { arabic: "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ", english: "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] wrath or of those who are astray." },
+    ],
+    // Add more mock Ayahs for other surahs as needed for a more complete simulation
+    2: [ // Al-Baqarah (first few for example)
+      { arabic: "الم", english: "Alif, Lam, Meem." },
+      { arabic: "ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ", english: "This is the Book about which there is no doubt, a guidance for those conscious of Allah -" },
+      { arabic: "الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنفِقُونَ", english: "Who believe in the unseen, establish prayer, and spend from what We have provided for them," },
+    ]
+  };
 
-  const mockAyahTranslations = [
-    "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
-    "All praise is due to Allah, Lord of the worlds -",
-    "The Entirely Merciful, the Especially Merciful,",
-    "Sovereign of the Day of Recompense.",
-    "It is You we worship and You we ask for help.",
-    "Guide us to the straight path -",
-    "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] wrath or of those who are astray.",
-  ];
+  // Helper to get ayah content for the selected surah
+  const getAyahsForSelectedSurah = () => {
+    if (!selectedSurah) return [];
+    return mockAyahContent[selectedSurah.id] || [];
+  };
 
   return (
     <div className="p-4 flex flex-col lg:flex-row gap-4 animate-fade-in">
       <div className="lg:w-1/3 bg-white p-4 rounded-lg shadow-md max-h-[calc(100vh-140px)] overflow-y-auto">
-        <h2 className="text-xl font-bold text-emerald-700 mb-4">Surahs (Chapters)</h2>
+        <h2 className="text-xl font-bold text-emerald-700 mb-4 text-center">Surahs</h2>
         <ul className="space-y-2">
           {surahs.map((surah) => (
             <li
@@ -708,26 +704,40 @@ const QuranPage = ({ surahs }) => {
               <span>
                 {surah.id}. {surah.name} <span className="text-sm text-gray-500">({surah.english})</span>
               </span>
-              <span className="text-sm text-gray-400">{surah.verses} Ayahs</span>
+              <span className="text-sm text-gray-400 font-arabic">{surah.arabic_name}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="lg:w-2/3 bg-white p-4 rounded-lg shadow-md max-h-[calc(100vh-140px)] overflow-y-auto">
+      <div className="lg:w-2/3 bg-white p-4 rounded-lg shadow-md max-h-[calc(100vh-140px)] overflow-y-auto relative">
         {selectedSurah ? (
           <div>
             <h2 className="text-2xl font-bold text-center text-emerald-700 mb-4 py-2 border-b border-gray-200">
               {selectedSurah.name} <span className="text-lg text-gray-600">({selectedSurah.english})</span>
             </h2>
+            {selectedSurah && (
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <span className="text-gray-500 text-sm">Last read:</span>
+                <span className="font-semibold text-emerald-700">
+                  {selectedSurah.name} : Ayah {selectedAyahIndex + 1}
+                </span>
+              </div>
+            )}
             <div className="space-y-6 mt-4">
-              {mockAyahs.slice(0, selectedSurah.verses > mockAyahs.length ? mockAyahs.length : selectedSurah.verses).map((ayah, index) => (
-                <div key={index} className="border-b pb-4 last:border-b-0 border-gray-100">
+              {getAyahsForSelectedSurah().map((ayahData, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedAyahIndex(index)}
+                  className={`border-b pb-4 last:border-b-0 border-gray-100 cursor-pointer p-2 rounded-lg transition-all ${
+                    selectedAyahIndex === index ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
+                  }`}
+                >
                   <p className="text-2xl text-right font-arabic leading-loose mb-2 rtl:text-right">
-                    <span className="text-emerald-600 font-bold mr-2">{index + 1}.</span>{ayah}
+                    <span className="text-emerald-600 font-bold mr-2">{index + 1}.</span>{ayahData.arabic}
                   </p>
                   <p className="text-md text-gray-700 leading-relaxed bg-gray-50 p-2 rounded-md">
-                    <span className="font-semibold">Translation:</span> {mockAyahTranslations[index] || "Translation not available."}
+                    <span className="font-semibold">Translation:</span> {ayahData.english}
                   </p>
                   <button className="mt-3 text-sm text-blue-600 hover:text-blue-800 flex items-center bg-blue-50 px-3 py-1 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -738,7 +748,33 @@ const QuranPage = ({ surahs }) => {
                 </div>
               ))}
             </div>
-            {selectedSurah.verses > mockAyahs.length && (
+            {/* Navigation for ayahs */}
+            {selectedSurah && getAyahsForSelectedSurah().length > 0 && (
+              <div className="flex justify-between items-center mt-6">
+                <button
+                  onClick={() => setSelectedAyahIndex(prev => Math.max(0, prev - 1))}
+                  disabled={selectedAyahIndex === 0}
+                  className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-lg font-bold text-gray-700">
+                  Ayah {selectedAyahIndex + 1} of {getAyahsForSelectedSurah().length}
+                </span>
+                <button
+                  onClick={() => setSelectedAyahIndex(prev => Math.min(getAyahsForSelectedSurah().length - 1, prev + 1))}
+                  disabled={selectedAyahIndex === getAyahsForSelectedSurah().length - 1}
+                  className="bg-emerald-500 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            {selectedSurah.verses > getAyahsForSelectedSurah().length && (
               <p className="text-center text-gray-500 mt-4 text-sm">
                 Only a few verses displayed for demonstration. Full Surah has {selectedSurah.verses} verses.
               </p>
@@ -762,7 +798,13 @@ const DuasPage = ({ duas }) => {
   }, {});
 
   // State to manage which categories are open/collapsed
-  const [openCategories, setOpenCategories] = useState({});
+  // Initialize all categories as open by default for visibility in preview
+  const [openCategories, setOpenCategories] = useState(
+    Object.keys(categorizedDuas).reduce((acc, category) => {
+      acc[category] = true; // All open by default
+      return acc;
+    }, {})
+  );
 
   const toggleCategory = (category) => {
     setOpenCategories(prev => ({
@@ -836,7 +878,7 @@ const MorePage = ({ handleNavLinkClick }) => {
       alert("Navigating to Donation Page (Simulated)");
       // For this simulation, we'll just show the DonationPage directly within More
       // You would typically render a dedicated component here
-      handleNavLinkClick('/more/donation-subpage'); // A unique path to trigger sub-content
+      setCurrentPage('/more/donation-subpage'); // A unique path to trigger sub-content
     } else {
       alert(`Navigating to ${path.replace('/', '').replace('-', ' ')} (Simulated)`);
     }
